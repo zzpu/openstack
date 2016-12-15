@@ -598,6 +598,8 @@ class Controller(wsgi.Controller):
 
         limit, marker = common.get_limit_and_marker(req)
         try:
+            #compute_api在__init__函数初始化
+            #实现在nova\compute\api.py的API
             instance_list = self.compute_api.get_all(context,
                                                      search_opts=search_opts,
                                                      limit=limit,

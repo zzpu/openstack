@@ -1890,7 +1890,7 @@ def instance_get_all_by_filters(context, filters, sort_key, sort_dir,
         manual_joins = ['metadata', 'system_metadata']
     else:
         manual_joins, columns_to_join = _manual_join_columns(columns_to_join)
-
+    #实例模型
     query_prefix = session.query(models.Instance)
     for column in columns_to_join:
         query_prefix = query_prefix.options(joinedload(column))

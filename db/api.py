@@ -53,7 +53,7 @@ CONF.register_opts(db_opts)
 
 _BACKEND_MAPPING = {'sqlalchemy': 'nova.db.sqlalchemy.api'}
 
-
+#api在nova.db.sqlalchemy.api中
 IMPL = concurrency.TpoolDbapiWrapper(CONF, backend_mapping=_BACKEND_MAPPING)
 
 LOG = logging.getLogger(__name__)

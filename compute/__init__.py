@@ -33,7 +33,7 @@ def _get_compute_api_class_name():
     cell_type = nova.cells.opts.get_cell_type()
     return CELL_TYPE_TO_CLS_NAME[cell_type]
 
-
+#返回None,所以取CELL_TYPE_TO_CLS_NAME的nova.compute.api.API
 def API(*args, **kwargs):
     importutils = nova.openstack.common.importutils
     class_name = _get_compute_api_class_name()

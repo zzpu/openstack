@@ -1916,7 +1916,7 @@ class API(base.Base):
         'sort_dir' parameter using the key specified in the 'sort_key'
         parameter.
         """
-
+        LOG.info('tag add by zzpu')
         # TODO(bcwaldon): determine the best argument for target here
         target = {
             'project_id': context.project_id,
@@ -1928,7 +1928,7 @@ class API(base.Base):
         if search_opts is None:
             search_opts = {}
 
-        LOG.debug("Searching by: %s" % str(search_opts))
+        LOG.info("Searching by: %s" % str(search_opts))
 
         # Fixups for the DB call
         filters = {}
@@ -1981,7 +1981,7 @@ class API(base.Base):
                     # return an empty list
                     except ValueError:
                         return []
-
+        #获取所有虚拟机实例信息
         inst_models = self._get_instances_by_filters(context, filters,
                 sort_key, sort_dir, limit=limit, marker=marker,
                 expected_attrs=expected_attrs)
@@ -2017,7 +2017,7 @@ class API(base.Base):
                         result_objs.append(instance)
                         continue
         return objects.InstanceList(objects=result_objs)
-
+    #获取所有虚拟机实例信息
     def _get_instances_by_filters(self, context, filters,
                                   sort_key, sort_dir,
                                   limit=None,
@@ -2026,6 +2026,7 @@ class API(base.Base):
                   'security_groups']
         if expected_attrs:
             fields.extend(expected_attrs)
+            #实现在nova\objects\instance.py
         return objects.InstanceList.get_by_filters(
             context, filters=filters, sort_key=sort_key, sort_dir=sort_dir,
             limit=limit, marker=marker, expected_attrs=fields)

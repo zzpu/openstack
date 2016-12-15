@@ -689,6 +689,7 @@ class InstanceList(base.ObjectListBase, base.NovaObject):
     def get_by_filters(cls, context, filters,
                        sort_key='created_at', sort_dir='desc', limit=None,
                        marker=None, expected_attrs=None, use_slave=False):
+        # api在nova.db.sqlalchemy.api中
         db_inst_list = db.instance_get_all_by_filters(
             context, filters, sort_key, sort_dir, limit=limit, marker=marker,
             columns_to_join=_expected_cols(expected_attrs),

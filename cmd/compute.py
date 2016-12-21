@@ -56,6 +56,15 @@ def block_db_access():
 
 
 def main():
+    """加载和设置配置参数，有两点需要注意：
+    1. 调用rpc.set_defaults设置默认的exchange为nova，如果不设置则为
+    openstack
+    2. 调用rpc.init设置Transport和Notifier,Transport是
+    oslo_messaging/transport.py/Transport实例，我采用的是默认的
+    rpc_backend=rabbit，所以Transport采用的driver=oslo_messaging/
+    _drivers/impl_rabbit.py/RabbitDriver；Notifier是一个通知消息发
+    送器，它借助Transport完成通知消息的发送
+    """
     config.parse_args(sys.argv)
     logging.setup('nova')
     utils.monkey_patch()
@@ -67,9 +76,17 @@ def main():
         block_db_access()
         objects_base.NovaObject.indirection_api = \
             conductor_rpcapi.ConductorAPI()
-
+    """调用类方法nova/service.py/Service.create创建Service服务对象
+    输入参数topic = compute， db_allowd = false；`create`方法是一个
+    类方法（@classmethod），它首先基于输入参数和（/etc/nova.conf中的选
+    项）设置配置，然后创建一个Service对象并返回给调用者
+    """
     server = service.Service.create(binary='nova-compute',
                                     topic=CONF.compute_topic,
                                     db_allowed=CONF.conductor.use_local)
+    """调用server方法启动服务并调用wait方法等待服务启动完成,serve方法创
+    建Launcher服务启动实例对象（这里是ServiceLauncher）来启动服务，
+    但最终会调用server.start方法启动服务。
+    """
     service.serve(server)
     service.wait()

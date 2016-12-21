@@ -62,7 +62,7 @@ def _load_pipeline(loader, pipeline):
 
 def pipeline_factory(loader, global_conf, **local_conf):
     """A paste pipeline replica that keys off of auth_strategy."""
-    #默认是keystone,就在上面定义
+    #CONF.auth_strategy默认是keystone,就在上面定义
     pipeline = local_conf[CONF.auth_strategy]
     LOG.info('auth_strategy:%s'%CONF.auth_strategy )
     #默认是false

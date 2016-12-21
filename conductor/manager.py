@@ -635,7 +635,7 @@ class ComputeTaskManager(base.Base):
             # instance specific information
             bdms = objects.BlockDeviceMappingList.get_by_instance_uuid(
                     context, instance.uuid)
-
+            #使用rpc调用
             self.compute_rpcapi.build_and_run_instance(context,
                     instance=instance, host=host['host'], image=image,
                     request_spec=request_spec,

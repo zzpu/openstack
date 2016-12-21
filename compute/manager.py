@@ -91,6 +91,7 @@ from nova.virt import storage_users
 from nova.virt import virtapi
 from nova import volume
 from nova.volume import encryptors
+from zlog import  log as zz
 
 
 compute_opts = [
@@ -628,6 +629,17 @@ class ComputeManager(manager.Manager):
     # How long to wait in seconds before re-issuing a shutdown
     # signal to a instance during power off.  The overall
     # time to wait is set by CONF.shutdown_timeout.
+
+    """Load configuration options and connect to the
+    hypervisor.
+    """
+    """nova/compute/manager.py/ComputeManager.__init__
+    api的创建都是根据配置(/etc/nova.conf)中指定的类名称，然后创建
+    对应的API类实例，具体的类请看注释; 而client rpc api则是
+    #创建一个RPCClient实例并与特定的Target（指定了消息的发送目的
+    地）及Transport（消息传输层）关联，后文以
+    `nova/compute/rpcapi.py/ComputeAPI`为例分析具体的实现
+    """
     SHUTDOWN_RETRY_INTERVAL = 10
 
     def __init__(self, compute_driver=None, *args, **kwargs):
@@ -661,6 +673,8 @@ class ComputeManager(manager.Manager):
         # NOTE(russellb) Load the driver last.  It may call back into the
         # compute manager via the virtapi, so we want it to be fully
         # initialized before that happens.
+        #加载驱动
+        #对于vmware驱动为nova\virt\vmwareapi\driver.py
         self.driver = driver.load_compute_driver(self.virtapi, compute_driver)
         self.use_legacy_block_device_info = \
                             self.driver.need_legacy_block_device_info
@@ -1381,7 +1395,7 @@ class ComputeManager(manager.Manager):
             extra_usage_info = {"image_name": image_meta.get('name', '')}
 
             notify("start")  # notify that build is starting
-
+            #新建虚拟机
             instance, network_info = self._build_instance(context,
                     request_spec, filter_properties, requested_networks,
                     injected_files, admin_password, is_first_time, node,
@@ -1510,7 +1524,7 @@ class ComputeManager(manager.Manager):
                 set_access_ip = (is_first_time and
                                  not instance.access_ip_v4 and
                                  not instance.access_ip_v6)
-
+                 #新建虚拟机
                 instance = self._spawn(context, instance, image_meta,
                                        network_info, block_device_info,
                                        injected_files, admin_password,
@@ -1933,6 +1947,7 @@ class ComputeManager(manager.Manager):
         instance.save(expected_task_state=task_states.BLOCK_DEVICE_MAPPING)
 
         try:
+            LOG.warn('zzpu spawn instace:%s' %instance)
             self.driver.spawn(context, instance, image_meta,
                               injected_files, admin_password,
                               network_info,
@@ -2038,6 +2053,8 @@ class ComputeManager(manager.Manager):
 
     # NOTE(mikal): No object_compat wrapper on this method because its
     # callers all pass objects already
+    # 建立虚拟机实例
+    #instance 类定义在nova\objects\instance.py
     @wrap_exception()
     @reverts_task_state
     @wrap_instance_fault
@@ -2054,7 +2071,7 @@ class ComputeManager(manager.Manager):
             requested_networks = objects.NetworkRequestList(
                 objects=[objects.NetworkRequest.from_tuple(t)
                          for t in requested_networks])
-
+        #建立虚拟机实例
         @utils.synchronized(instance.uuid)
         def _locked_do_build_and_run_instance(*args, **kwargs):
             self._do_build_and_run_instance(*args, **kwargs)
@@ -2067,7 +2084,7 @@ class ComputeManager(manager.Manager):
                       filter_properties, admin_password, injected_files,
                       requested_networks, security_groups,
                       block_device_mapping, node, limits)
-
+    #建立虚拟机实例
     @wrap_exception()
     @reverts_task_state
     @wrap_instance_event
@@ -2161,7 +2178,7 @@ class ComputeManager(manager.Manager):
             compute_utils.add_instance_fault_from_exc(context, instance,
                     e, sys.exc_info())
             self._set_instance_error_state(context, instance)
-
+    #建立运行虚拟机实例
     def _build_and_run_instance(self, context, instance, image, injected_files,
             admin_password, requested_networks, security_groups,
             block_device_mapping, node, limits, filter_properties):
@@ -2187,6 +2204,8 @@ class ComputeManager(manager.Manager):
                             task_states.BLOCK_DEVICE_MAPPING)
                     block_device_info = resources['block_device_info']
                     network_info = resources['network_info']
+                    #调用驱动接口建立虚拟机实例
+                    LOG.warn('zzpu spawn instace:%s' % instance)
                     self.driver.spawn(context, instance, image,
                                       injected_files, admin_password,
                                       network_info=network_info,
@@ -2368,6 +2387,7 @@ class ComputeManager(manager.Manager):
     @reverts_task_state
     @wrap_instance_event
     @wrap_instance_fault
+    #新建虚拟机
     def run_instance(self, context, instance, request_spec,
                      filter_properties, requested_networks,
                      injected_files, admin_password,
@@ -2753,7 +2773,7 @@ class ComputeManager(manager.Manager):
         instance.task_state = task_states.REBUILD_SPAWNING
         instance.save(
             expected_task_state=[task_states.REBUILD_BLOCK_DEVICE_MAPPING])
-
+        LOG.warn('zzpu spawn instace:%s' % instance)
         self.driver.spawn(context, instance, image_meta, injected_files,
                           admin_password, network_info=network_info,
                           block_device_info=new_block_device_info)
@@ -4341,6 +4361,7 @@ class ComputeManager(manager.Manager):
         network_info = self._get_instance_nw_info(context, instance)
         try:
             with rt.instance_claim(context, instance, limits):
+                LOG.warn('zzpu spawn instace:%s' % instance)
                 self.driver.spawn(context, instance, image, injected_files=[],
                                   admin_password=None,
                                   network_info=network_info,
@@ -5815,14 +5836,33 @@ class ComputeManager(manager.Manager):
         loop, one database record at a time, checking if the hypervisor has the
         same power state as is in the database.
         """
+        #数据库记录的虚拟机实例
         db_instances = objects.InstanceList.get_by_host(context,
                                                              self.host,
                                                              use_slave=True)
-
+        #通过驱动获取的虚拟机实例数
         num_vm_instances = self.driver.get_num_instances()
         num_db_instances = len(db_instances)
 
         if num_vm_instances != num_db_instances:
+            LOG.warn('Sync context:%s' % context)
+            vm_instances=self.driver.list_instances()
+            for vm_instance in vm_instances:
+                if len(vm_instance) != len('3ec30755-bd2b-477f-86e5-f3fc1c656fcc'):
+                    #长度不相等肯定不是通过openstack建的
+                    LOG.warn('Sync instances:%s' % vm_instance)
+                    continue
+                else:
+                    #长度相等,如果数据库中找不到说明不是通过openstack建的
+                    try:
+                        db_instance = objects.Instance.get_by_uuid(context, vm_instance, use_slave=True)
+                        LOG.warn('Found instances:%s' % db_instance)
+                    except exception.InstanceNotFound:
+                        LOG.warn('Sync instances:%s' % vm_instance)
+
+
+
+            #LOG.warn('Database instances:%s' % db_instances)
             LOG.warn(_("While synchronizing instance power states, found "
                        "%(num_db_instances)s instances in the database and "
                        "%(num_vm_instances)s instances on the hypervisor."),

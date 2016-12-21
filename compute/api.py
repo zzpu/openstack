@@ -868,6 +868,7 @@ class API(base.Base):
         instances = []
         try:
             for i in xrange(num_instances):
+                # instance 类定义在nova\objects\instance.py
                 instance = objects.Instance()
                 instance.update(base_options)
                 instance = self.create_db_entry_for_new_instance(
@@ -1026,7 +1027,7 @@ class API(base.Base):
                     quotas.commit()
 
         return group
-
+    #
     def _create_instance(self, context, instance_type,
                image_href, kernel_id, ramdisk_id,
                min_count, max_count,
@@ -1440,7 +1441,7 @@ class API(base.Base):
             if utils.is_neutron():
                 self._check_multiple_instances_neutron_ports(
                     requested_networks)
-
+        #建立虚拟机
         return self._create_instance(
                        context, instance_type,
                        image_href, kernel_id, ramdisk_id,

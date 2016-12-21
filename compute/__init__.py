@@ -36,6 +36,7 @@ def _get_compute_api_class_name():
 #返回None,所以取CELL_TYPE_TO_CLS_NAME的nova.compute.api.API
 def API(*args, **kwargs):
     importutils = nova.openstack.common.importutils
+    #nova.compute.api.API
     class_name = _get_compute_api_class_name()
     return importutils.import_object(class_name, *args, **kwargs)
 

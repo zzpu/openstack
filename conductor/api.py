@@ -245,6 +245,7 @@ class LocalComputeTaskAPI(object):
             filter_properties, admin_password, injected_files,
             requested_networks, security_groups, block_device_mapping,
             legacy_bdm=True):
+        #利用
         utils.spawn_n(self._manager.build_instances, context,
                 instances=instances, image=image,
                 filter_properties=filter_properties,
@@ -355,6 +356,7 @@ class ComputeTaskAPI(object):
     def build_instances(self, context, instances, image, filter_properties,
             admin_password, injected_files, requested_networks,
             security_groups, block_device_mapping, legacy_bdm=True):
+        #调用rpc接口建立虚拟机实例
         self.conductor_compute_rpcapi.build_instances(context,
                 instances=instances, image=image,
                 filter_properties=filter_properties,

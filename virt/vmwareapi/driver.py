@@ -38,6 +38,7 @@ from nova.virt.vmwareapi import host
 from nova.virt.vmwareapi import vm_util
 from nova.virt.vmwareapi import vmops
 from nova.virt.vmwareapi import volumeops
+from zlog import log as zz
 
 LOG = logging.getLogger(__name__)
 
@@ -142,6 +143,7 @@ class VMwareVCDriver(driver.ComputeDriver):
             raise error_util.UseLinkedCloneConfigurationFault()
 
         # Get the list of clusters to be used
+        #获取可用集群列表
         self._cluster_names = CONF.vmware.cluster_name
         self.dict_mors = vm_util.get_all_cluster_refs_by_name(self._session,
                                           self._cluster_names)
@@ -223,8 +225,11 @@ class VMwareVCDriver(driver.ComputeDriver):
     def list_instances(self):
         """List VM instances from all nodes."""
         instances = []
+        #这里会更新资源字典
         nodes = self.get_available_nodes()
         for node in nodes:
+            # 获取虚拟机列表
+            #vmops的类定义在 nova\virt\vmwareapi\vmops.py
             vmops = self._get_vmops_for_compute_node(node)
             instances.extend(vmops.list_instances())
         return instances
@@ -311,6 +316,7 @@ class VMwareVCDriver(driver.ComputeDriver):
             nodename = self._create_nodename(node, name)
             _vc_state = host.VCState(self._session, nodename,
                                      self.dict_mors.get(node)['cluster_mor'])
+            #设置资源字典
             self._resources[nodename] = {'vmops': _vmops,
                                          'volumeops': _volumeops,
                                          'vcstate': _vc_state,
@@ -430,15 +436,18 @@ class VMwareVCDriver(driver.ComputeDriver):
     def get_host_stats(self, refresh=False):
         """Return currently known host stats."""
         stats_list = []
+        #这里会更新资源字典
         nodes = self.get_available_nodes()
         for node in nodes:
             stats_list.append(self.get_available_resource(node))
         return stats_list
 
+    #新建虚拟机
     def spawn(self, context, instance, image_meta, injected_files,
               admin_password, network_info=None, block_device_info=None):
         """Create VM instance."""
         _vmops = self._get_vmops_for_compute_node(instance['node'])
+        #zz.log('zxpu spawn:%s' %instance)
         _vmops.spawn(context, instance, image_meta, injected_files,
               admin_password, network_info, block_device_info)
 

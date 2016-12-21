@@ -43,6 +43,7 @@ from nova.openstack.common import timeutils
 from nova.openstack.common import uuidutils
 from nova import policy
 from nova import utils
+from zlog import log as zz
 
 
 server_opts = [
@@ -502,6 +503,7 @@ class Controller(wsgi.Controller):
 
     def __init__(self, ext_mgr=None, **kwargs):
         super(Controller, self).__init__(**kwargs)
+        #nova.compute.api.API
         self.compute_api = compute.API()
         self.ext_mgr = ext_mgr
 
@@ -774,12 +776,13 @@ class Controller(wsgi.Controller):
         except exception.NotFound:
             msg = _("Instance could not be found")
             raise exc.HTTPNotFound(explanation=msg)
-
+     #建立虚拟机实例
     @wsgi.response(202)
     @wsgi.serializers(xml=FullServerTemplate)
     @wsgi.deserializers(xml=CreateDeserializer)
     def create(self, req, body):
         """Creates a new server for a given user."""
+
         if not self.is_valid_body(body, 'server'):
             raise exc.HTTPUnprocessableEntity()
 
@@ -790,7 +793,9 @@ class Controller(wsgi.Controller):
         if 'name' not in server_dict:
             msg = _("Server name is not defined")
             raise exc.HTTPBadRequest(explanation=msg)
-
+        if 'sync' in server_dict:
+            zz.log('zzpu sync:%s' % server_dict['sync'])
+        zz.log('zzpu dict:%s' % server_dict)
         name = server_dict['name']
         self._validate_server_name(name)
         name = name.strip()
@@ -936,7 +941,8 @@ class Controller(wsgi.Controller):
             _get_inst_type = flavors.get_flavor_by_flavor_id
             inst_type = _get_inst_type(flavor_id, ctxt=context,
                                        read_deleted="no")
-
+            zz.log('zzpu create:%s' % name)
+            #nova.compute.api.API
             (instances, resv_id) = self.compute_api.create(context,
                         inst_type,
                         image_uuid,

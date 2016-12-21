@@ -41,6 +41,7 @@ from nova import servicegroup
 from nova import utils
 from nova import version
 from nova import wsgi
+from zlog import log as zz
 
 LOG = logging.getLogger(__name__)
 
@@ -107,7 +108,7 @@ service_opts = [
     cfg.StrOpt('network_manager',
                default='nova.network.manager.VlanManager',
                help='Full class name for the Manager for network'),
-    cfg.StrOpt('scheduler_manager',
+    cfg.StrOpt('scheduler ',
                default='nova.scheduler.manager.SchedulerManager',
                help='Full class name for the Manager for scheduler'),
     cfg.IntOpt('service_down_time',
@@ -127,7 +128,26 @@ class Service(service.Service):
     on topic. It also periodically runs tasks on the manager and reports
     it state to the database services table.
     """
+    """nova/service.py/Service.__init__
+    输入参数如下：
+        host = 'devstack'
+        binary = 'nova-compute'
+        topic = 'compute'
+        manager = 'nova.compute.manager.ComputeManager'
+        report_interval = 10
+        periodic_enable = True
+        periodic_fuzzy_delay = 60
+        periodic_interval_max = None
+        db_allowed = False
+        args = ()
+        kwargs = {}
+    构造函数中主要实现了如下功能：
+    1. 成员变量赋值
+    2. 初始化ComputeManager对象
+    3. 初始化conductor API对象
 
+    后文重点分析2和3
+    """
     def __init__(self, host, binary, topic, manager, report_interval=None,
                  periodic_enable=None, periodic_fuzzy_delay=None,
                  periodic_interval_max=None, db_allowed=True,
@@ -144,9 +164,15 @@ class Service(service.Service):
         # we want to make sure that our value of db_allowed is there when it
         # gets created.  For that to happen, this has to be the first instance
         # of the servicegroup API.
+
+        #实例化servicegroup API(nova/servicegroup/api.py/API)
+        #CONF.servicegroup_driver指定所使用的存储驱动（可以是db，
+        #zookeeper，memcache,默认是db）
         self.servicegroup_api = servicegroup.API(db_allowed=db_allowed)
+        #self.manager_class_name='compute_manager'
         manager_class = importutils.import_class(self.manager_class_name)
         self.manager = manager_class(host=self.host, *args, **kwargs)
+
         self.rpcserver = None
         self.report_interval = report_interval
         self.periodic_enable = periodic_enable
@@ -154,7 +180,9 @@ class Service(service.Service):
         self.periodic_interval_max = periodic_interval_max
         self.saved_args, self.saved_kwargs = args, kwargs
         self.backdoor_port = None
+        # 实例化conductor API(nova/conductor/api.py/API)
         self.conductor_api = conductor.API(use_local=db_allowed)
+        # 发送ping消息，等待nova-conductor服务准备就绪
         self.conductor_api.wait_until_ready(context.get_admin_context())
 
     def start(self):
@@ -185,7 +213,7 @@ class Service(service.Service):
             self.manager.backdoor_port = self.backdoor_port
 
         LOG.debug("Creating RPC server for service %s", self.topic)
-
+        #target用来指定该rpc server监听在哪些队列上
         target = messaging.Target(topic=self.topic, server=self.host)
 
         endpoints = [
@@ -195,7 +223,7 @@ class Service(service.Service):
         endpoints.extend(self.manager.additional_endpoints)
 
         serializer = objects_base.NovaObjectSerializer()
-
+        #建立RPC调用服务
         self.rpcserver = rpc.get_server(target, endpoints, serializer)
         self.rpcserver.start()
 
@@ -252,13 +280,17 @@ class Service(service.Service):
         if not host:
             host = CONF.host
         if not binary:
+            #nova-compute
             binary = os.path.basename(sys.argv[0])
         if not topic:
             topic = binary.rpartition('nova-')[2]
         if not manager:
+
             manager_cls = ('%s_manager' %
                            binary.rpartition('nova-')[2])
+            zz.log('zzpu:%s' % manager_cls)
             manager = CONF.get(manager_cls, None)
+
         if report_interval is None:
             report_interval = CONF.report_interval
         if periodic_enable is None:
@@ -336,7 +368,7 @@ class WSGIService(object):
         self.app = self.loader.load_app(name)
         #监听ip
         self.host = getattr(CONF, '%s_listen' % name, "0.0.0.0")
-        #监听端口,openstack的api默认8774
+        #监听端口,openstack的api默认8774,就在本文件的上面定义
         self.port = getattr(CONF, '%s_listen_port' % name, 0)
         self.workers = (getattr(CONF, '%s_workers' % name, None) or
                         processutils.get_worker_count())

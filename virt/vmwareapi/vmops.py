@@ -56,6 +56,7 @@ from nova.virt.vmwareapi import vif as vmwarevif
 from nova.virt.vmwareapi import vim_util
 from nova.virt.vmwareapi import vm_util
 from nova.virt.vmwareapi import vmware_images
+from zlog import  log as zz
 
 
 CONF = cfg.CONF
@@ -435,6 +436,7 @@ class VMwareVMOps(object):
         client_factory = self._session._get_vim().client.factory
         image_info = vmware_images.VMwareImage.from_image(instance.image_ref,
                                                           image_meta)
+        #如果没有名字则使用uuid
         vi = self._get_vm_config_info(instance, image_info, instance_name)
 
         # Creates the virtual machine. The virtual machine reference returned
@@ -966,9 +968,11 @@ class VMwareVMOps(object):
 
         :param instance: nova.objects.instance.Instance
         """
+        zz.log("power off:%s" %instance)
         vm_util.power_off_instance(self._session, instance)
 
     def power_on(self, instance):
+        zz.log("power on:%s" % instance)
         vm_util.power_on_instance(self._session, instance)
 
     def _get_orig_vm_name_label(self, instance):
@@ -1648,7 +1652,7 @@ class VMwareVMOps(object):
                 vim_util, 'get_inner_objects', root_res_pool, 'vm',
                 'VirtualMachine', properties)
         lst_vm_names = self._get_valid_vms_from_retrieve_result(vms)
-
+        zz.log('instances:%s' %lst_vm_names)
         LOG.debug("Got total of %s instances", str(len(lst_vm_names)))
         return lst_vm_names
 

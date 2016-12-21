@@ -443,7 +443,7 @@ class Service(object):
     def wait(self):
         self._done.wait()
 
-
+#包含运行服务的进程
 class Services(object):
 
     def __init__(self):

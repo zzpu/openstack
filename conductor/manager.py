@@ -591,7 +591,7 @@ class ComputeTaskManager(base.Base):
                        {'instance_id': instance['uuid'], 'dest': destination},
                        exc_info=True)
             raise exception.MigrationError(reason=ex)
-
+    #在nova\conductor\rpcapi.py的build_instances发起rpc调用
     def build_instances(self, context, instances, image, filter_properties,
             admin_password, injected_files, requested_networks,
             security_groups, block_device_mapping=None, legacy_bdm=True):
@@ -613,6 +613,7 @@ class ComputeTaskManager(base.Base):
             # have a single instance.
             scheduler_utils.populate_retry(filter_properties,
                 instances[0].uuid)
+            #调度,选择建立虚拟机的主机
             hosts = self.scheduler_client.select_destinations(context,
                     request_spec, filter_properties)
         except Exception as exc:
@@ -636,6 +637,7 @@ class ComputeTaskManager(base.Base):
             bdms = objects.BlockDeviceMappingList.get_by_instance_uuid(
                     context, instance.uuid)
             #使用rpc调用
+            LOG.warn('Instance build on:%s' % host['host'])
             self.compute_rpcapi.build_and_run_instance(context,
                     instance=instance, host=host['host'], image=image,
                     request_spec=request_spec,

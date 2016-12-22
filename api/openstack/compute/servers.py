@@ -787,6 +787,7 @@ class Controller(wsgi.Controller):
             raise exc.HTTPUnprocessableEntity()
 
         context = req.environ['nova.context']
+        zz.log('zzpu context:%s' % context)
         server_dict = body['server']
         password = self._get_server_admin_password(server_dict)
 

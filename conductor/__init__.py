@@ -14,7 +14,7 @@
 #    under the License.
 
 import oslo.config.cfg
-
+from zlog import log as zz
 from nova.conductor import api as conductor_api
 
 
@@ -30,7 +30,9 @@ def API(*args, **kwargs):
 def ComputeTaskAPI(*args, **kwargs):
     use_local = kwargs.pop('use_local', False)
     if oslo.config.cfg.CONF.conductor.use_local or use_local:
+        zz.log('ComputeTaskAPI:use_local')
         api = conductor_api.LocalComputeTaskAPI
     else:
+        zz.log('ComputeTaskAPI:not use_local' )
         api = conductor_api.ComputeTaskAPI
     return api(*args, **kwargs)

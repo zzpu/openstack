@@ -226,7 +226,7 @@ class Service(service.Service):
         #建立RPC调用服务
         self.rpcserver = rpc.get_server(target, endpoints, serializer)
         self.rpcserver.start()
-
+        # Manager对象其实就是RPC API的入口。每个RPC API最终会转化为对Manger相应方法的调用，这个方法就是该RPC API的最终实现。
         self.manager.post_start_hook()
 
         LOG.debug("Join ServiceGroup membership for this service %s",
@@ -283,6 +283,7 @@ class Service(service.Service):
             #nova-compute
             binary = os.path.basename(sys.argv[0])
         if not topic:
+            #topic 一般都是nova-xxx(xxx可以是compute,conductor,scheduler,consoleauth等)
             topic = binary.rpartition('nova-')[2]
         if not manager:
 

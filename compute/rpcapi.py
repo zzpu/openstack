@@ -913,7 +913,7 @@ class ComputeAPI(object):
             version='3.23')
         cctxt.cast(ctxt, 'external_instance_event', instances=instances,
                    events=events)
-
+    # Manager对象其实就是RPC API的入口。每个RPC API最终会转化为对Manger相应方法的调用，这个方法就是该RPC API的最终实现。
     def build_and_run_instance(self, ctxt, instance, host, image, request_spec,
             filter_properties, admin_password=None, injected_files=None,
             requested_networks=None, security_groups=None,

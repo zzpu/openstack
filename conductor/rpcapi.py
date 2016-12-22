@@ -390,6 +390,9 @@ class ComputeTaskAPI(object):
 
     def __init__(self):
         super(ComputeTaskAPI, self).__init__()
+        #client有两种调用方法，cast和call，cast是异步，执行之后不要求返回，call是同步，执行之后需要结果返回。client需要执行target，即消息发送的终点位置。
+        # 定义在 nova\conductor\api.py
+        # topic=conductor
         target = messaging.Target(topic=CONF.conductor.topic,
                                   namespace='compute_task',
                                   version='1.0')
@@ -413,7 +416,7 @@ class ComputeTaskAPI(object):
                           block_migration=block_migration,
                           disk_over_commit=disk_over_commit,
                           reservations=reservations)
-
+    # Manager对象其实就是RPC API的入口。每个RPC API最终会转化为对Manger相应方法的调用，这个方法就是该RPC API的最终实现。
     def build_instances(self, context, instances, image, filter_properties,
             admin_password, injected_files, requested_networks,
             security_groups, block_device_mapping, legacy_bdm=True):
@@ -433,8 +436,9 @@ class ComputeTaskAPI(object):
             version = '1.5'
             kw.update({'block_device_mapping': block_device_mapping,
                        'legacy_bdm': legacy_bdm})
-
+        #client有两种调用方法，cast和call，cast是异步，执行之后不要求返回，call是同步，执行之后需要结果返回。client需要执行target，即消息发送的终点位置。
         cctxt = self.client.prepare(version=version)
+        #发送消息到消息队列
         cctxt.cast(context, 'build_instances', **kw)
 
     def unshelve_instance(self, context, instance):

@@ -27,7 +27,8 @@ from nova.openstack.common.report import guru_meditation_report as gmr
 from nova import service
 from nova import utils
 from nova import version
-
+#定义在 nova\conductor\api.py
+# topic=conductor
 CONF = cfg.CONF
 CONF.import_opt('topic', 'nova.conductor.api', group='conductor')
 
@@ -44,5 +45,6 @@ def main():
                                     topic=CONF.conductor.topic,
                                     manager=CONF.conductor.manager)
     workers = CONF.conductor.workers or processutils.get_worker_count()
+    #start方法用来启动rpc server。
     service.serve(server, workers=workers)
     service.wait()

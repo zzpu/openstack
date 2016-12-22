@@ -284,6 +284,7 @@ class API(base.Base):
             # TODO(alaski): Remove calls into here from conductor manager so
             # that this isn't necessary. #1180540
             from nova import conductor
+            # conductor_api.ComputeTaskAPI
             self._compute_task_api = conductor.ComputeTaskAPI()
         return self._compute_task_api
 
@@ -871,6 +872,7 @@ class API(base.Base):
                 # instance 类定义在nova\objects\instance.py
                 instance = objects.Instance()
                 instance.update(base_options)
+                #建立数据库记录
                 instance = self.create_db_entry_for_new_instance(
                         context, instance_type, boot_meta, instance,
                         security_groups, block_device_mapping,
@@ -1098,7 +1100,7 @@ class API(base.Base):
 
         instance_group = self._get_requested_instance_group(context,
                                    scheduler_hints, check_server_group_quota)
-
+        #建立instances对象,以及数据库表记录
         instances = self._provision_instances(context, instance_type,
                 min_count, max_count, base_options, boot_meta, security_groups,
                 block_device_mapping, shutdown_terminate,
@@ -1112,7 +1114,8 @@ class API(base.Base):
         for instance in instances:
             self._record_action_start(context, instance,
                                       instance_actions.CREATE)
-
+        # conductor_api.ComputeTaskAPI
+        #实现在 nova\conductor\api.py 356
         self.compute_task_api.build_instances(context,
                 instances=instances, image=boot_meta,
                 filter_properties=filter_properties,
@@ -1349,14 +1352,16 @@ class API(base.Base):
         This is called by the scheduler after a location for the
         instance has been determined.
         """
+        # 填充实例的基本信息，例如状态,ID网络类型等
         self._populate_instance_for_create(context, instance, image, index,
                                            security_group, instance_type)
-
+        # 填充实例的名称、主机名
         self._populate_instance_names(instance, num_instances)
 
         instance.shutdown_terminate = shutdown_terminate
 
         self.security_group_api.ensure_default(context)
+        # 创建数据库记录
         instance.create(context)
 
         if num_instances > 1:

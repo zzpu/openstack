@@ -357,6 +357,7 @@ class ComputeTaskAPI(object):
             admin_password, injected_files, requested_networks,
             security_groups, block_device_mapping, legacy_bdm=True):
         #调用rpc接口建立虚拟机实例
+        #Manager对象其实就是RPC API的入口。每个RPC API最终会转化为对Manger相应方法的调用，这个方法就是该RPC API的最终实现。
         self.conductor_compute_rpcapi.build_instances(context,
                 instances=instances, image=image,
                 filter_properties=filter_properties,

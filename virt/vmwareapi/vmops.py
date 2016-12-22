@@ -91,7 +91,7 @@ class VirtualMachineInstanceConfigInfo(object):
 
         # Get the instance name. In some cases this may differ from the 'uuid',
         # for example when the spawn of a rescue instance takes place.
-        self.instance_name = instance_name or instance.uuid
+        self.instance_name = instance_name or instance.display_name
 
         self.ii = image_info
         self.root_gb = instance.root_gb

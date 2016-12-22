@@ -871,6 +871,7 @@ class API(base.Base):
             for i in xrange(num_instances):
                 # instance 类定义在nova\objects\instance.py
                 instance = objects.Instance()
+                #实现在nova\objects\base.py.  其实是self[key] = value,将options与instance绑定
                 instance.update(base_options)
                 #建立数据库记录
                 instance = self.create_db_entry_for_new_instance(
@@ -1071,7 +1072,8 @@ class API(base.Base):
         handle_az = self._handle_availability_zone
         availability_zone, forced_host, forced_node = handle_az(context,
                                                             availability_zone)
-
+        #display_name作为base_options的成员
+        #base_options其实是个map
         base_options, max_net_count = self._validate_and_build_base_options(
                 context,
                 instance_type, boot_meta, image_href, image_id, kernel_id,
@@ -1101,6 +1103,7 @@ class API(base.Base):
         instance_group = self._get_requested_instance_group(context,
                                    scheduler_hints, check_server_group_quota)
         #建立instances对象,以及数据库表记录
+        # 将base_options与instance绑定
         instances = self._provision_instances(context, instance_type,
                 min_count, max_count, base_options, boot_meta, security_groups,
                 block_device_mapping, shutdown_terminate,

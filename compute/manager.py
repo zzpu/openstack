@@ -2074,6 +2074,7 @@ class ComputeManager(manager.Manager):
         #建立虚拟机实例
         @utils.synchronized(instance.uuid)
         def _locked_do_build_and_run_instance(*args, **kwargs):
+            ###############
             self._do_build_and_run_instance(*args, **kwargs)
 
         # NOTE(danms): We spawn here to return the RPC worker thread back to

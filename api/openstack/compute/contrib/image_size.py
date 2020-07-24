@@ -30,7 +30,7 @@ class ImagesSizeTemplate(xmlutil.TemplateBuilder):
         root = xmlutil.TemplateElement('images')
         elem = xmlutil.SubTemplateElement(root, 'image', selector='images')
         make_image(elem)
-        return xmlutil.SlaveTemplate(root, 1, nsmap={
+        return xmlutil.SubordinateTemplate(root, 1, nsmap={
             Image_size.alias: Image_size.namespace})
 
 
@@ -38,7 +38,7 @@ class ImageSizeTemplate(xmlutil.TemplateBuilder):
     def construct(self):
         root = xmlutil.TemplateElement('image', selector='image')
         make_image(root)
-        return xmlutil.SlaveTemplate(root, 1, nsmap={
+        return xmlutil.SubordinateTemplate(root, 1, nsmap={
             Image_size.alias: Image_size.namespace})
 
 
@@ -52,7 +52,7 @@ class ImageSizeController(wsgi.Controller):
     def show(self, req, resp_obj, id):
         context = req.environ["nova.context"]
         if authorize(context):
-            # Attach our slave template to the response object
+            # Attach our subordinate template to the response object
             resp_obj.attach(xml=ImageSizeTemplate())
             image_resp = resp_obj.obj['image']
             # image guaranteed to be in the cache due to the core API adding
@@ -64,7 +64,7 @@ class ImageSizeController(wsgi.Controller):
     def detail(self, req, resp_obj):
         context = req.environ['nova.context']
         if authorize(context):
-            # Attach our slave template to the response object
+            # Attach our subordinate template to the response object
             resp_obj.attach(xml=ImagesSizeTemplate())
             images_resp = list(resp_obj.obj['images'])
             # images guaranteed to be in the cache due to the core API adding
